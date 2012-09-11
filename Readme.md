@@ -2,6 +2,7 @@
 WordpressのXML-RPC投稿を簡単に行うためのクラスです。
 
 ##Usage
+このサンプルでいう`$data`が[wp.newPost - XML-RPC WordPress API/Posts](http://codex.wordpress.org/XML-RPC_WordPress_API/Posts#wp.newPost)の`struct content`にあたる変数になっています。
 ~~~~~~{.usage}
 require_once('wp.xmlrpc.php');
 
