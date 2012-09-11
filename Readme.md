@@ -2,6 +2,7 @@
 WordpressのXML-RPC投稿を簡単に行うためのクラスです。
 
 ##Usage
+~~~~~~{.usage}
   require_once('wp.xmlrpc.php');
   
   $host     = 'hogehoge.net';
@@ -14,16 +15,17 @@ WordpressのXML-RPC投稿を簡単に行うためのクラスです。
   $data = array(
     'post_title' => 'タイトル',
     'post_content' => '内容です！',
-    'post_thumbnail' => 'test.jpg',
+    'post_thumbnail' => 'test.jpg', // 他ドメインも可
     'terms_names' => array(
       'post_tag' => array('タグ１', 'タグ２')
     )
   );
   
   $wp->newPost($data)
+~~~~~~
 
 ##Public Method
-
+~~~~~~{.method}
   /**
    * コンストラクタ
    *
@@ -33,14 +35,16 @@ WordpressのXML-RPC投稿を簡単に行うためのクラスです。
    * @param    string  $password    Wordpressパスワード
    * @return   void
    */
-
+  public function __construct(string, string, string, string);
+  
   /**
    * 新規記事投稿
    *
    * @param    struct  $data    投稿内容のデータ
    * @return   struct
    */
-
+  public function newPost(struct);
+  
   /**
    * Term一覧取得
    *
@@ -48,20 +52,25 @@ WordpressのXML-RPC投稿を簡単に行うためのクラスです。
    * @param    struct  $filter      Term ID
    * @return   struct
    */
-
+  public function getTerms(string, struct);
+  
   /**
    * Term作成
    *
    * @param    struct  $content    Termデータ
    * @return   struct
    */
-
+  public function newTerm(struct);
+  
   /**
    * ファイルアップロード
    *
    * @param    string  $path    ファイルパス
+   * @param    string  $name    ファイル名
    * @return   struct
    */
+   public function uploadFile(string, string);
+~~~~~~
 
 ##Author
 Twitter: @moi_fc2  

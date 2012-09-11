@@ -302,6 +302,7 @@ class wpXMLRPC {
    * ファイルアップロード
    *
    * @param    string  $path    ファイルパス
+   * @param    string  $name    ファイル名
    * @return   struct
    */
   public function uploadFile($path, $name = null) {
