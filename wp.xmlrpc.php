@@ -55,7 +55,7 @@ class wpXMLRPC {
     }
     return XML_RPC_decode($res->value());
   }
-  
+
   /**
    * 新規記事投稿
    *
@@ -159,6 +159,7 @@ class wpXMLRPC {
           'struct'
         );
       }
+      $content['custom_fields'] = new XML_RPC_Value($content['custom_fields'], 'struct');
     }
     // スラッグ名
     if ( $post_name = $data['post_name'] ) {
@@ -210,7 +211,7 @@ class wpXMLRPC {
     }
     $content = new XML_RPC_Value($content, 'struct');
     $publish = new XML_RPC_Value(1, 'boolean');
-    $message = new XML_RPC_Message(  
+    $message = new XML_RPC_Message(
       'wp.newPost',
       array($this->blog_id, $this->user, $this->password, $content, $publish)
     );
@@ -235,7 +236,7 @@ class wpXMLRPC {
         'error' => 'タクソノミーを指定してください。'
       );
     }
-    
+
     $data[3] = new XML_RPC_Value($taxonomy, 'string');
     if ( count($filter) ) {
       $filterData = array();
