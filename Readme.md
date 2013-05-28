@@ -18,11 +18,35 @@ $data = array(
   'post_content' => '内容です！',
   'post_thumbnail' => 'test.jpg', // 他ドメインも可
   'terms_names' => array(
-    'post_tag' => array('タグ１', 'タグ２')
+    'post_tag' => array('タグ１', 'タグ２', array('name'=> 'タグ3', 'slug' => 'Tag3'))
   )
 );
 
 $wp->newPost($data)
+~~~~~~
+
+<ins>2013-05-29 :</ins> wp.newPost APIのcontentに独自に`terms_slugs`を追加しました。  
+termのnameは一意でないため`terms_names`は避けて、`terms`かこちらの`terms_slugs`を使用することをオススメします。
+
+~~~~~~
+$data = array(
+  'post_title' => 'タイトル',
+  'post_content' => '内容です！',
+  'terms_slugs' => array(
+    'category' => array(
+    	// 既存のCat1というスラッグを持つカテゴリーを指定
+    	'Cat1',
+
+    	// スラッグCat1-1が存在しなければ作成(このときnameが必須)、
+	// 存在すればスラッグCat1-1を持つカテゴリが指定される
+	array(
+		'name' => 'カテゴリ1-1',
+		'slug' => 'Cat1-1',
+		'parent' => '0' // 親カテゴリのterm_id
+	)
+    )
+  )
+);
 ~~~~~~
 
 ##Public Method

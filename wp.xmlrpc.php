@@ -11,8 +11,7 @@
  * @author     moi <twitter: @moi_fc2>
  * @copyright  2012 moi
  * @license    MIT Licence
- * @version    v1.0.0
- * @link       http://url.com
+ * @version    v1.0.1
  */
 
 require_once('XML/RPC.php');
@@ -175,28 +174,81 @@ class wpXMLRPC {
         }
         $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
       }
-      $content['terms'] = new XML_RPC_Value($content['terms'], 'struct');
     }
     // terms_names
     if ( $terms_names = $data['terms_names'] ) {
       $content['terms_names'] = array();
       foreach($terms_names as $key => $value) {
-        $termList = $this->createHash( $this->getTerms($key), 'name' );
+        $termList = $this->createHash( $this->getTerms($key), 'slug' );
         $content['terms_names'][$key] = array();
-        foreach($value as $name) {
-          if (!$termList[$name]) {// Termが存在しない場合は作成
-            $this->newTerm(
-              array(
-                'name' => $name,
+        foreach($value as $term) {
+          $name = '';
+          $termKey = '';
+          $termValue = array();
+          if (is_array($term)) {
+            if (!isset($term['name'])) continue;
+            $name = $term['name'];
+            $termKey = ($term['slug']) ? $term['slug'] : $term['name'];
+            $termValue = $term;
+            $termValue['taxonomy'] = $key;
+          } else {
+            $name = $term;
+            $termKey = $term;
+            $termValue = array(
+                'name' => $term,
                 'taxonomy' => $key
-              )
             );
+          }
+          if (!$termList[$termKey]) {// Termが存在しない場合は作成
+            $this->newTerm($termValue);
           }
           $content['terms_names'][$key][] = new XML_RPC_Value($name, 'string');
         }
         $content['terms_names'][$key] = new XML_RPC_Value($content['terms_names'][$key], 'struct');
       }
       $content['terms_names'] = new XML_RPC_Value($content['terms_names'], 'struct');
+    }
+    // terms_slugs
+    if ( $terms_slugs = $data['terms_slugs'] ) {
+      $content['terms'] = (is_array($content['terms'])) ? $content['terms'] : array();
+      foreach($terms_slugs as $key => $value) {
+        $content['terms'][$key] = ($content['terms'][$key]) ? $content['terms'][$key] : array();
+        $termList = $this->createHash( $this->getTerms($key), 'slug' );
+        foreach($value as $term) {
+          $is_array = is_array($term);
+          $slug = ($is_array) ? $term['slug'] : $term;
+          if ($slug == '') continue;
+          // slug から term_id 取得
+          $term_id = '';
+          foreach($termList as $t) {
+            if ($t['slug'] == mb_strtolower($slug)) {
+              $term_id = $t['term_id'];
+              break;
+            }
+          }
+          // $term_id が空の場合は新規作成
+          if ($term_id == '') {
+            if (!isset($term['name'])) continue;
+            $termValue = array();
+            if ($is_array) {
+              $termValue = $term;
+              $termValue['taxonomy'] = $key;
+            } else {
+              $termValue = array(
+                'name' => $term['name'],
+                'slug' => $slug,
+                'taxonomy' => $key
+              );
+            }
+            $term_id = $this->newTerm($termValue);
+          }
+          $content['terms'][$key][] = new XML_RPC_Value($term_id, 'int');
+        }
+        $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
+      }
+    }
+    if (is_array($content['terms'])) {
+      $content['terms'] = new XML_RPC_Value($content['terms'], 'struct');
     }
     // enclosure
     if ( $enclosure = $data['enclosure'] ) {
@@ -340,6 +392,7 @@ class wpXMLRPC {
     }
     return $hash;
   }
+
 }
 
 ?>
