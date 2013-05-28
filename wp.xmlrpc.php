@@ -11,7 +11,7 @@
  * @author     moi <twitter: @moi_fc2>
  * @copyright  2012 moi
  * @license    MIT Licence
- * @version    v1.0.1
+ * @version    v1.0.2
  */
 
 require_once('XML/RPC.php');
@@ -187,6 +187,7 @@ class wpXMLRPC {
         }
         $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
       }
+      $content['terms'] = new XML_RPC_Value($content['terms'], 'struct');
     }
     // terms_names
     if ( $terms_names = $data['terms_names'] ) {
@@ -196,8 +197,10 @@ class wpXMLRPC {
         $content['terms_names'][$key] = array();
         foreach($value as $term) {
           $name = '';
+          $slug = '';
           $termKey = '';
           $termValue = array();
+          $term_id = '';
           if (is_array($term)) {
             if (!isset($term['name'])) continue;
             $name = $term['name'];
@@ -212,14 +215,13 @@ class wpXMLRPC {
                 'taxonomy' => $key
             );
           }
-          if (!$termList[$termKey]) {// Termが存在しない場合は作成
-            $this->newTerm($termValue);
-          }
-          $content['terms_names'][$key][] = new XML_RPC_Value($name, 'string');
+          $termKey  = mb_strtolower($termKey);
+          $term_id = (!$termList[$termKey]) ? $this->newTerm($termValue) : $termList[$termKey]['term_id'];
+          $content['terms'][$key][] = new XML_RPC_Value($term_id, 'int');
         }
-        $content['terms_names'][$key] = new XML_RPC_Value($content['terms_names'][$key], 'struct');
+        $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
       }
-      $content['terms_names'] = new XML_RPC_Value($content['terms_names'], 'struct');
+      $content['terms'] = new XML_RPC_Value($content['terms'], 'struct');
     }
     // terms_slugs
     if ( $terms_slugs = $data['terms_slugs'] ) {
@@ -255,8 +257,6 @@ class wpXMLRPC {
         }
         $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
       }
-    }
-    if (is_array($content['terms'])) {
       $content['terms'] = new XML_RPC_Value($content['terms'], 'struct');
     }
     // enclosure
