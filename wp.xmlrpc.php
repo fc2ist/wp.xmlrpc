@@ -169,7 +169,20 @@ class wpXMLRPC {
       $content['terms'] = array();
       foreach($terms as $key => $value) {
         $content['terms'][$key] = array();
-        foreach($value as $id) {
+        $termList = $this->createHash( $this->getTerms($key), 'slug' );
+        foreach($value as $term) {
+          $id = '';
+          if (is_array($term)) {
+            if ($term['slug'] != '') {
+              $t = $termList[mb_strtolower($term['slug'])];
+              $id = $t['term_id'];
+            } else {
+              $term['taxonomy'] = $key;
+              $id = newTerm($term);
+            }
+          } else {
+            $id = $term;
+          }
           $content['terms'][$key][] = new XML_RPC_Value($id, 'int');
         }
         $content['terms'][$key] = new XML_RPC_Value($content['terms'][$key], 'struct');
@@ -220,14 +233,10 @@ class wpXMLRPC {
           if ($slug == '') continue;
           // slug から term_id 取得
           $term_id = '';
-          foreach($termList as $t) {
-            if ($t['slug'] == mb_strtolower($slug)) {
-              $term_id = $t['term_id'];
-              break;
-            }
-          }
+          $t = $termList[mb_strtolower($slug)];
           // $term_id が空の場合は新規作成
-          if ($term_id == '') {
+          if ($t != '') {
+            $term_id = $t['term_id'];
             if (!isset($term['name'])) continue;
             $termValue = array();
             if ($is_array) {
@@ -388,7 +397,7 @@ class wpXMLRPC {
   protected function createHash(array $terms, $key) {
     $hash = array();
     foreach($terms as $term) {
-      $hash[ $term[$key] ] = $term;
+      $hash[ mb_strtolower($term[$key]) ] = $term;
     }
     return $hash;
   }
