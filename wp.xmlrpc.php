@@ -54,14 +54,9 @@ class wpXMLRPC {
     }
     return XML_RPC_decode($res->value());
   }
-
-  /**
-   * 新規記事投稿
-   *
-   * @param    struct  $data    投稿内容のデータ
-   * @return   struct
-   */
-  public function newPost(array $data) {
+  
+  
+  public function contentData(array $data){
     $content = array();
 
     // 投稿タイプ (post|page|attachment)
@@ -150,13 +145,24 @@ class wpXMLRPC {
     if ( $custom_fields = $data['custom_fields'] ) {
       $content['custom_fields'] = array();
       foreach($custom_fields as $field) {
-        $content['custom_fields'][] = new XML_RPC_Value(
-          array(
-            'key' => new XML_RPC_Value($field['key'], 'string'),
-            'value' => new XML_RPC_Value($field['value'], 'string')
-          ),
-          'struct'
-        );
+        if(!$field['id']){
+            $content['custom_fields'][] = new XML_RPC_Value(
+                array(
+                  'key' => new XML_RPC_Value($field['key'], 'string'),
+                  'value' => new XML_RPC_Value($field['value'], 'string')
+                ),
+                'struct'
+            );
+        }else{
+            $content['custom_fields'][] = new XML_RPC_Value(
+                array(
+                  'id' => new XML_RPC_Value($field['id'], 'string'),
+                  'key' => new XML_RPC_Value($field['key'], 'string'),
+                  'value' => new XML_RPC_Value($field['value'], 'string')
+                ),
+                'struct'
+            );
+        }
       }
       $content['custom_fields'] = new XML_RPC_Value($content['custom_fields'], 'struct');
     }
@@ -165,7 +171,7 @@ class wpXMLRPC {
       $content['post_name'] = new XML_RPC_Value($post_name, 'string');
     }
     // terms
-    if ( $terms = $data['terms'] ) {
+    if ( $terms = $data['terms'] ) {    
       $content['terms'] = array();
       foreach($terms as $key => $value) {
         $content['terms'][$key] = array();
@@ -215,6 +221,9 @@ class wpXMLRPC {
                 'taxonomy' => $key
             );
           }
+          //termKey urlencode 
+          $termKey = urlencode($termKey);
+          
           $termKey  = mb_strtolower($termKey);
           $term_id = (!$termList[$termKey]) ? $this->newTerm($termValue) : $termList[$termKey]['term_id'];
           $content['terms'][$key][] = new XML_RPC_Value($term_id, 'int');
@@ -270,6 +279,18 @@ class wpXMLRPC {
         'struct'
       );
     }
+    return $content;
+  }
+  /**
+   * 新規記事投稿
+   *
+   * @param    struct  $data    投稿内容のデータ
+   * @return   struct
+   */
+  public function newPost(array $data) {
+  
+    $content = $this->contentData($data);
+    
     $content = new XML_RPC_Value($content, 'struct');
     $publish = new XML_RPC_Value(1, 'boolean');
     $message = new XML_RPC_Message(
@@ -278,6 +299,50 @@ class wpXMLRPC {
     );
     return $this->sendXMLRPC($message);
   }
+ /**
+ * 記事編集
+ */
+  public function editPost(array $data, $wp_post_id=null) {
+      
+      $content = $this->contentData($data);
+
+      $wp_id = new XML_RPC_Value($wp_post_id, 'int');
+      $content = new XML_RPC_Value($content, 'struct');
+      $message = new XML_RPC_Message(
+                      'wp.editPost',
+                      array($this->blog_id, $this->user, $this->password, $wp_id, $content)
+      );
+
+      return $this->sendXMLRPC($message);
+  }  
+  
+ /**
+ * 記事削除
+ */
+  public function deletePost($wp_post_id=null, $force_delete=false) {
+      
+      $wp_id = new XML_RPC_Value($wp_post_id, 'int');
+      $message = new XML_RPC_Message(
+                      'wp.deletePost',
+                      array($this->blog_id, $this->user, $this->password, $wp_id)
+      );
+
+      return $this->sendXMLRPC($message);
+  }  
+  
+ /**
+ * 記事取得
+ */
+public function getPost($wp_post_id=null) {
+  $wp_id = new XML_RPC_Value($wp_post_id, 'int');
+
+  $message = new XML_RPC_Message(
+                        'wp.getPost',
+                        array($this->blog_id, $this->user, $this->password, $wp_id)
+  );
+
+  return $this->sendXMLRPC($message);
+}
 
   /**
    * Term一覧取得
